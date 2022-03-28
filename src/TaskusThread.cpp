@@ -1,26 +1,29 @@
 #include "TaskusThread.h"
+#include "TaskusPool.h"
 
 
 namespace Taskus{
-    TaskusThread::TaskusThread(std::string nname, std::array<InterThreadQueue*,2> * nqueues){
+    TaskusThread::TaskusThread(std::string nname, InterThreadQueue * recv_queue, TaskPool * tPool)
+    {
         name = nname;
-        queues = nqueues;
+        receiveQueue = recv_queue;
+        masterPool = tPool;
         
         
     }
 
     void TaskusThread::loop(){
         while(true){
-            std::unique_lock lk(queues->at(0)->queueMutex);
-            queues->at(0)->condVariable.wait(lk);
+            std::unique_lock<std::mutex> lk{receiveQueue->queueMutex};
+            receiveQueue->condVariable.wait(lk);
             //after this we gain the lock on the queueMutex and we can alter everything we want
-            MessageThreadQueue m = queues->at(0)->queue.at(0);
-            queues->at(0)->queue.pop_front();
+            MessageThreadQueue m = receiveQueue->queue.at(0);
+            receiveQueue->queue.pop_front();
 
             lk.unlock();
             //we unlock prior to notifying because it doesnt make that much sense and it could run into some
             //conflits ig
-            queues->at(0)->condVariable.notify_one();
+            receiveQueue->condVariable.notify_one();
 
 
             //now we can process the message freely
@@ -36,5 +39,9 @@ namespace Taskus{
             }
             if(quit) break; //exit the main loop which makes the thread joinable by the system
         }
+    }
+
+    void TaskusThread::startThread(){
+        thisThread = new std::thread([this]{loop();});
     }
 }

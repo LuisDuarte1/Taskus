@@ -7,6 +7,8 @@
 #include <atomic>
 #include <condition_variable>
 
+#include "TaskusTask.h"
+
 namespace Taskus{
 
 
@@ -18,7 +20,8 @@ namespace Taskus{
     struct MessageThreadQueue{
         MessageType mType; //This is obrigatory in every message, every other argument could be optional
         uint8_t priority = 0; //0-20. 0 means lowest priority, 20 means highest priority
-
+        Task * tasksToRun;
+        uint32_t numTasks;
     };
 
 

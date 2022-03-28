@@ -9,6 +9,7 @@
 
 #include "ThreadMessage.h"
 #include "TaskusThread.h"
+#include "TaskusTask.h"
 
 namespace Taskus{
 
@@ -17,17 +18,20 @@ namespace Taskus{
     class TaskPool{
         public:
             TaskPool();
-            //TODO: start and quit functions
+            
             void start(); 
             void stop(); //blocking function, waits for all threads to join 
+
+            void addTask(Task * newTask);
 
         private:
 
             std::vector<TaskusThread * > threads;
 
-            //for every thread it should be created two deques to allow interthread communication
-            //index 0 represents TaskusPool->TaskusThread, index 1 represents TaskusThread->TaskusPool
-            std::vector<std::array<InterThreadQueue*,2>> thread_deques;
+            //for every thread it should be created one deques to allow interthread communication
+            //it represents communication in direction TaskPool -> TaskusThread, the other direction should be
+            //made with functions referencing this class 
+            std::vector<InterThreadQueue *> threadDeques;
 
     };
 

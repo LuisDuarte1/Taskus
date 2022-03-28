@@ -27,6 +27,9 @@ enable_testing()
 
 #make a shared library and 
 add_library(Taskus SHARED ${SOURCE_FILESS} ${INCLUDE_FILESS})
+set(THREADS_PREFER_PTHREAD_FLAG ON)
+find_package(Threads REQUIRED)
+target_link_libraries(Taskus PRIVATE Threads::Threads)
 target_include_directories(Taskus PUBLIC include)
 target_compile_features(Taskus PUBLIC cxx_std_20)
 
@@ -37,7 +40,7 @@ include(GoogleTest)
 
 #now, we create the executables for testing
 add_executable(tests ${TEST_FILES})
-target_link_libraries(tests Taskus gtest_main)
+target_link_libraries(tests Threads::Threads Taskus gtest_main)
 gtest_discover_tests(tests)
 
 

@@ -9,10 +9,17 @@
 #include "ThreadMessage.h"
 
 namespace Taskus{
+    class TaskPool;
+
 
     class TaskusThread{
         public:
-            TaskusThread(std::string nname, std::array<InterThreadQueue*,2> * nqueues);
+        
+            TaskusThread(std::string nname, InterThreadQueue * recv_queue, TaskPool * tPool);
+
+            void startThread();
+
+            std::thread * thisThread;
 
             void loop();
             
@@ -21,8 +28,9 @@ namespace Taskus{
         private:
             std::string name;
             
-            //index 0 represents TaskusPool->TaskusThread, index 1 represents TaskusThread->TaskusPool
-            std::array<InterThreadQueue*,2> * queues;
+            
+            InterThreadQueue * receiveQueue;
+            TaskPool * masterPool;
     };
 }
 
