@@ -13,6 +13,7 @@ TaskPool::TaskPool(){
         TaskusThread * t = new TaskusThread(std::to_string(i), threadDeques[threadDeques.size()-1], this); 
 
         threads.emplace_back(t);
+        tasksRunning.push_back({});
         
     }
 
@@ -51,9 +52,40 @@ void TaskPool::stop(){
     }
 }
 
+void TaskPool::addTaskNoValidation(Task * newTask){
+    //first we will find the best thread for this task (for now it's the minimum)
+    int thread_id = tasksRunning[0].size();
+    for(int i = 1; i < threads.size(); i++){
+        if(tasksRunning[i].size() < thread_id) thread_id = i;
+    }
+    //now we will add the current task to this id
+    //create message
+    threadDeques[thread_id]->queueMutex.lock();
+    MessageThreadQueue m;
+    m.mType = START_TASK;
+    m.numTasks = 1;
+    m.tasksToRun = newTask;
+    m.priority = 0;
+    //send message to thread
+    threadDeques[thread_id]->queue.push_front(m);
+    threadDeques[thread_id]->queueMutex.unlock();
+    threadDeques[thread_id]->condVariable.notify_one();
+    //add task to tasksrunnign
+    tasksRunning[thread_id].push_back(newTask);
+
+    //add the dependants
+    for(int i = 0; i < newTask->dependentTasks.size(); i++)
+        addTaskNoValidation(newTask->dependentTasks[i]);
+}
+
 void TaskPool::addTask(Task * newTask){
     //before adding to the list we need to traverse the TaskTree and add every task manually
-    //TODO(luisd): validate TaskTree acordingly, if it's invalid throw an error.
+    if(ValidateTask(newTask) != VALIDATION_PASSED){ //it will check the task in current state
+        std::cout << "Couldn't validate this task, will not add it to the pool" << "\n";
+        return;
+    }
+     
+    addTaskNoValidation(newTask);
 }
 
 }
