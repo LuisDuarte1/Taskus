@@ -1,5 +1,7 @@
 cmake_minimum_required(VERSION 3.12.0)
 project(Taskus VERSION 0.1.0)
+
+#NEEDS GNU G++ VERSION >11
 set(CMAKE_CXX_STANDARD 20)
 
 #get source files
@@ -29,7 +31,8 @@ enable_testing()
 add_library(Taskus SHARED ${SOURCE_FILESS} ${INCLUDE_FILESS})
 set(THREADS_PREFER_PTHREAD_FLAG ON)
 find_package(Threads REQUIRED)
-target_link_libraries(Taskus PRIVATE Threads::Threads)
+find_library(atomic-lib atomic)
+target_link_libraries(Taskus PRIVATE Threads::Threads atomic)
 target_include_directories(Taskus PUBLIC include)
 target_compile_features(Taskus PUBLIC cxx_std_20)
 

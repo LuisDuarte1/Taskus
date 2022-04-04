@@ -5,7 +5,13 @@ namespace Taskus{
         finished.store(false);
     }
 
+
     void Task::runTask(){
+        //wait for dependencies
+        for(int i = 0; i < dependentTasks.size(); i++){
+            dependentTasks[i]->finished.wait(false);
+        }
+        //run function
         #ifdef PROFILING_ENABLED
             start = std::chrono::high_resolution_clock::now();
             runTaskFunction();
@@ -14,6 +20,9 @@ namespace Taskus{
         #else
             runTaskFunction();
         #endif
+        //notify dependants that this has finished
+        finished.store(true);
+        finished.notify_all();
     }
     
     #ifdef PROFILING_ENABLED
@@ -26,7 +35,8 @@ namespace Taskus{
             return m;
         }
 
-    #endif
 
+    #endif
     
 }
+

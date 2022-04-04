@@ -8,6 +8,7 @@
 #include <string>
 
 #include "ThreadMessage.h"
+#include "TaskValidator.h"
 #include "TaskusThread.h"
 #include "TaskusTask.h"
 
@@ -24,7 +25,13 @@ namespace Taskus{
 
             void addTask(Task * newTask);
 
+
         private:
+
+            void addTaskNoValidation(Task * newTask);
+
+            void mutateTask(Task * taskToMutate);
+            std::vector<std::vector<Task*>> tasksRunning;
 
             std::vector<TaskusThread * > threads;
 
@@ -32,6 +39,8 @@ namespace Taskus{
             //it represents communication in direction TaskPool -> TaskusThread, the other direction should be
             //made with functions referencing this class 
             std::vector<InterThreadQueue *> threadDeques;
+
+        
 
     };
 

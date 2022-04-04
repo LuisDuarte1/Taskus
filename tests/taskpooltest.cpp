@@ -26,3 +26,6 @@ TEST(TaskPoolTest, StartAndStopTest) {
     ASSERT_TRUE(stopped);
     
 }
+
+
+//TODO: run example task

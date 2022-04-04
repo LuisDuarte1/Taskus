@@ -78,6 +78,25 @@ void TaskPool::addTaskNoValidation(Task * newTask){
         addTaskNoValidation(newTask->dependentTasks[i]);
 }
 
+void TaskPool::mutateTask(Task * taskToMutate){
+    if(taskToMutate->mutationAddTask.size() != 0){
+        //remove old dependentTasks
+        taskToMutate->dependentTasks = {};
+        for(int i = 0; i < taskToMutate->mutationAddTask.size(); i++){
+            taskToMutate->dependentTasks.push_back(taskToMutate->mutationAddTask[i]);
+            taskToMutate->mutationAddTask[i]->addDependencyTask(taskToMutate);
+            
+        }
+        taskToMutate->mutationAddTask = {};
+    }
+    //TODO: remove mutation task
+
+    for(int i = 0; i < taskToMutate->dependentTasks.size(); i++){
+        mutateTask(taskToMutate->dependentTasks[i]);
+    }
+}
+
+
 void TaskPool::addTask(Task * newTask){
     //before adding to the list we need to traverse the TaskTree and add every task manually
     if(ValidateTask(newTask) != VALIDATION_PASSED){ //it will check the task in current state

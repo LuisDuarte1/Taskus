@@ -10,15 +10,20 @@
 #define PROFILING_ENABLED 1
 
 
+
 namespace Taskus{
+
+    class TaskPool;
+
     //this task represents the base class for any class and every new task should have this as his parent
     class Task{
 
         public:
             Task();
 
-
             void runTask();
+            virtual void tryMutate() = 0;
+
 
             //this function can't have any arguments, if it needs some kind of arguments, we need to
             //create a child class that has those parameters (because it's a task with a different functionality, probably)
@@ -29,9 +34,6 @@ namespace Taskus{
             //a task is considered final when it has zero dependentTasks
             std::vector<Task*> dependentTasks; 
 
-            //funtion that can be overriden to add/remove new subtasks, the added subtasks will be ran first
-            //than the main Task itself
-            virtual void checkForSubTasks() = 0;
 
             //if a task is supposed to call itself after it's done, this parameter should only be set
             //on the tasks with depth=0 (with no dependencies), which means that after we run the root
@@ -41,15 +43,34 @@ namespace Taskus{
 
             //we need to add dependencies because the task can only run when the atomic bool finished changes to true on 
             //all of dependencies
-            void addDependencyTask(Task * dependency);
+            inline void addDependencyTask(Task * dependency){dependenciesTasks.push_back(dependency);};
+            inline size_t getDependenciesSize(){return dependenciesTasks.size();};
+
+            /* In order to fix this we allow for mutations, that apply on the next iteration of the
+            of the task (if_repeatable is true on the root) 
+            */
+            std::vector<Task*> mutationAddTask;
+            std::vector<Task*> mutationRemoveTask;
+
+            //it's just a identifier for debugging, and identifing if it was added later, nothing related to the functionallity of taskus
+            bool isMutation = false; 
         
-        private:
-            //subtasks are when the task itself can be divided into segments, that according to it self,
-            //can be even further parellized, Taskus will not guarentee that running the subTasks is actually faster
-            std::vector<Task*> subTasks;
+        protected:
+
+
+            /*On why I removed the concept of sub-tasks altogether, it really doesnt make sense in the queue system
+                let's say I add 4 tasks on 1 cpus, and task 4 is dependent on task 3 which in turn is 
+                dependent in task 2 and finally dependent in task 1.
+                while adding sub-tasks let's say on task 1, there is going to be, problably,
+                a queue race between tasks and sub-tasks and even, there is a chance that when I add
+                subtasks, the other 3 threads are already waiting for this one to finish, so it's 
+                a deadlock. Therefore, to replace this functionality, which is main useful in repeatable
+                threads, we can always mutate the task thread and add more stuff to it.
+            */
+
+
 
             std::vector<Task*> dependenciesTasks;
-
 
             std::atomic<bool> finished;
 

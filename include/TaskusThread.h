@@ -4,6 +4,7 @@
 #include <array>
 #include <thread>
 #include <deque>
+#include <atomic>
 
 
 #include "ThreadMessage.h"
@@ -24,13 +25,18 @@ namespace Taskus{
             void loop();
             
             inline std::string getThreadName(){return name;};
+            inline bool getIfBusy(){return is_busy.load();};
+
 
         private:
             std::string name;
             
             
+            
             InterThreadQueue * receiveQueue;
             TaskPool * masterPool;
+            std::atomic<bool> is_busy;
+
     };
 }
 
