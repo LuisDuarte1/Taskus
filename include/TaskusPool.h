@@ -6,6 +6,7 @@
 #include <vector>
 #include <array>
 #include <string>
+#include <stdexcept>
 
 #include "ThreadMessage.h"
 #include "TaskValidator.h"
@@ -25,15 +26,20 @@ namespace Taskus{
 
             void addTask(Task * newTask);
 
+            void finishedTask(Task * task);
+
 
         private:
 
             void addTaskNoValidation(Task * newTask);
 
             void mutateTask(Task * taskToMutate);
+
+            std::mutex tasksRunningMutex;
             std::vector<std::vector<Task*>> tasksRunning;
 
             std::vector<TaskusThread * > threads;
+            
 
             //for every thread it should be created one deques to allow interthread communication
             //it represents communication in direction TaskPool -> TaskusThread, the other direction should be

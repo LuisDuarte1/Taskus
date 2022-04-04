@@ -2,14 +2,14 @@
 
 namespace Taskus{
     Task::Task(){
-        finished.store(false);
+        finished = false;
     }
 
 
     void Task::runTask(){
         //wait for dependencies
-        for(int i = 0; i < dependentTasks.size(); i++){
-            dependentTasks[i]->finished.wait(false);
+        for(int i = 0; i < dependenciesTasks.size(); i++){
+            dependenciesTasks[i]->waitToFinish();
         }
         //run function
         #ifdef PROFILING_ENABLED
@@ -21,8 +21,11 @@ namespace Taskus{
             runTaskFunction();
         #endif
         //notify dependants that this has finished
-        finished.store(true);
-        finished.notify_all();
+        runningMutex.lock();
+        finished = true;
+        runningCV.notify_all();
+        runningMutex.unlock();
+
     }
     
     #ifdef PROFILING_ENABLED
@@ -37,6 +40,21 @@ namespace Taskus{
 
 
     #endif
+    void Task::waitToFinish(){
+        std::unique_lock<std::mutex> lk(runningMutex);
+        if(finished == true){
+            return; //we first check if it has finished before waiting
+        }
+        runningCV.wait(lk);
+        if(finished == false){ 
+            //this is a spurious wakeup, which means that the thread recived a wake up call
+            //but the condition isn't met
+            //if this happens, we call the funcition again
+            lk.unlock();
+            waitToFinish();
+        }
+    }
+
     
 }
 

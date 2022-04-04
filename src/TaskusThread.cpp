@@ -35,10 +35,9 @@ namespace Taskus{
                 break;
             case START_TASK:
                 for(int i = 0; i < m.numTasks; i++){
-                    //TODO: run task can kind of mutate the task itself (add more tasks between itself and its dependants)
-                    //but it will only be effective in the next run (if there's any)
+                    m.tasksToRun[i].tryMutate();
                     m.tasksToRun[i].runTask(); 
-                    //TODO: remove task from running tasks in master pool
+                    masterPool->finishedTask(&(m.tasksToRun[i]));
                     
                 }
                 break;

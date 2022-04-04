@@ -53,6 +53,7 @@ void TaskPool::stop(){
 }
 
 void TaskPool::addTaskNoValidation(Task * newTask){
+    tasksRunningMutex.lock();
     //first we will find the best thread for this task (for now it's the minimum)
     int thread_id = tasksRunning[0].size();
     for(int i = 1; i < threads.size(); i++){
@@ -69,10 +70,12 @@ void TaskPool::addTaskNoValidation(Task * newTask){
     //send message to thread
     threadDeques[thread_id]->queue.push_front(m);
     threadDeques[thread_id]->queueMutex.unlock();
+    //notify thread
     threadDeques[thread_id]->condVariable.notify_one();
     //add task to tasksrunnign
     tasksRunning[thread_id].push_back(newTask);
 
+    tasksRunningMutex.unlock();
     //add the dependants
     for(int i = 0; i < newTask->dependentTasks.size(); i++)
         addTaskNoValidation(newTask->dependentTasks[i]);
@@ -103,8 +106,29 @@ void TaskPool::addTask(Task * newTask){
         std::cout << "Couldn't validate this task, will not add it to the pool" << "\n";
         return;
     }
-     
+    //TODO (luisd): if is_repeatable make a pseudo task that waits for the end tasks to run and
+    //repeat the process
+    mutateTask(newTask);
     addTaskNoValidation(newTask);
+}
+
+void TaskPool::finishedTask(Task * task){
+    tasksRunningMutex.lock();
+    bool found = false;
+    for(int i = 0; i < tasksRunning.size(); i++){
+        for(int e = 0; e < tasksRunning[i].size();e++){
+            if(tasksRunning[i][e] == task){
+                tasksRunning[i].erase(tasksRunning[i].begin() + e);
+                found = true;
+                break;
+            }
+        }
+    }
+    if(!found){
+        throw std::runtime_error("Couldn't find the task to remove it from tasksRunning...");
+    }
+    tasksRunningMutex.unlock();
+
 }
 
 }

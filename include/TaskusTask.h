@@ -4,6 +4,7 @@
 
 #include <iostream>
 #include <vector>
+#include <condition_variable>
 #include <chrono>
 #include <atomic>
 
@@ -46,6 +47,8 @@ namespace Taskus{
             inline void addDependencyTask(Task * dependency){dependenciesTasks.push_back(dependency);};
             inline size_t getDependenciesSize(){return dependenciesTasks.size();};
 
+            void waitToFinish();
+
             /* In order to fix this we allow for mutations, that apply on the next iteration of the
             of the task (if_repeatable is true on the root) 
             */
@@ -66,13 +69,16 @@ namespace Taskus{
                 subtasks, the other 3 threads are already waiting for this one to finish, so it's 
                 a deadlock. Therefore, to replace this functionality, which is main useful in repeatable
                 threads, we can always mutate the task thread and add more stuff to it.
+
+                MUTATIONS replace it
             */
 
 
 
             std::vector<Task*> dependenciesTasks;
-
-            std::atomic<bool> finished;
+            std::condition_variable runningCV;
+            std::mutex runningMutex;
+            bool finished;
 
             //this can be disabled in release builds to save a bit of processing
             #ifdef PROFILING_ENABLED
