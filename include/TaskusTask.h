@@ -62,7 +62,8 @@ namespace Taskus{
             bool isMutation = false; 
 
             //TODO (luisd): overloading + for adding a dependent task
-        
+
+            void operator+=(Task * t1);
         protected:
 
 

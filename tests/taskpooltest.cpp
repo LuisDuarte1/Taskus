@@ -131,8 +131,7 @@ TEST(TaskPoolTest, RunDependentTasksTest){
     };
     distanceExampleTask * t = new distanceExampleTask(points1, points2);
     sleepDependantTask * tt = new sleepDependantTask();
-    t->dependentTasks.emplace_back(tt);
-    tt->addDependencyTask(t);
+    *t += tt;
     tPool->addTask(t);
     tt->waitToFinish();
     std::cout << "I'm here \n";

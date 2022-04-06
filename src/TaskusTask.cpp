@@ -49,6 +49,13 @@ namespace Taskus{
         finishedSemaphore.release();
 
     }
+
+    void Task::operator+=(Task * t1){
+        this->dependentTasks.push_back(t1);
+        t1->addDependencyTask(this);
+    }
+
+
     
 
     
