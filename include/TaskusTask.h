@@ -4,11 +4,14 @@
 
 #include <iostream>
 #include <vector>
-#include <condition_variable>
 #include <chrono>
+#include <thread>
 #include <atomic>
+#include <semaphore>
 
 #define PROFILING_ENABLED 1
+
+#define MAX_DEPENDENT_TASKS 32
 
 
 
@@ -57,6 +60,8 @@ namespace Taskus{
 
             //it's just a identifier for debugging, and identifing if it was added later, nothing related to the functionallity of taskus
             bool isMutation = false; 
+
+            //TODO (luisd): overloading + for adding a dependent task
         
         protected:
 
@@ -76,9 +81,9 @@ namespace Taskus{
 
 
             std::vector<Task*> dependenciesTasks;
-            std::condition_variable runningCV;
-            std::mutex runningMutex;
-            bool finished;
+
+            std::counting_semaphore<MAX_DEPENDENT_TASKS> finishedSemaphore{0};
+
 
             //this can be disabled in release builds to save a bit of processing
             #ifdef PROFILING_ENABLED

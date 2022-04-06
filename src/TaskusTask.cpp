@@ -2,7 +2,7 @@
 
 namespace Taskus{
     Task::Task(){
-        finished = false;
+
     }
 
 
@@ -11,6 +11,7 @@ namespace Taskus{
         for(int i = 0; i < dependenciesTasks.size(); i++){
             dependenciesTasks[i]->waitToFinish();
         }
+        //TODO: before running function aquire them all
         //run function
         #ifdef PROFILING_ENABLED
             start = std::chrono::high_resolution_clock::now();
@@ -20,11 +21,13 @@ namespace Taskus{
         #else
             runTaskFunction();
         #endif
-        //notify dependants that this has finished
-        runningMutex.lock();
-        finished = true;
-        runningCV.notify_all();
-        runningMutex.unlock();
+
+        for(int i = 0; i < MAX_DEPENDENT_TASKS; i++){
+            finishedSemaphore.release();
+        }
+
+
+        
 
     }
     
@@ -41,19 +44,12 @@ namespace Taskus{
 
     #endif
     void Task::waitToFinish(){
-        std::unique_lock<std::mutex> lk(runningMutex);
-        if(finished == true){
-            return; //we first check if it has finished before waiting
-        }
-        runningCV.wait(lk);
-        if(finished == false){ 
-            //this is a spurious wakeup, which means that the thread recived a wake up call
-            //but the condition isn't met
-            //if this happens, we call the funcition again
-            lk.unlock();
-            waitToFinish();
-        }
+        //TODO: timeout?
+        finishedSemaphore.acquire();
+        finishedSemaphore.release();
+
     }
+    
 
     
 }

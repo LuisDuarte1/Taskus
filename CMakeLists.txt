@@ -1,11 +1,11 @@
 cmake_minimum_required(VERSION 3.12.0)
 project(Taskus VERSION 0.1.0)
 
-#NEEDS GNU G++ VERSION >10
-if(CMAKE_CXX_COMPILER_VERSION VERSION_LESS 10.0)
-    message(FATAL_ERROR "Couldn't find a suitable gcc version > 10.0")
+#NEEDS GNU G++ VERSION >11
+if(CMAKE_CXX_COMPILER_VERSION VERSION_LESS 11.0)
+    message(FATAL_ERROR "Couldn't find a suitable gcc version > 11.0")
 endif()
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 #get source files
@@ -50,6 +50,8 @@ add_executable(tests ${TEST_FILES})
 target_link_libraries(tests Threads::Threads Taskus gtest_main)
 gtest_discover_tests(tests TEST_LIST testslist)
 set_tests_properties(${testslist} PROPERTIES ENVIRONMENT "GUNIT_SHUFFLE=1")
+set_tests_properties(${testslist} PROPERTIES TIMEOUT 30)
+
 
 
 

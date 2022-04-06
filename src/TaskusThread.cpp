@@ -12,10 +12,19 @@ namespace Taskus{
         
     }
 
+    bool TaskusThread::getIfReceivedMessage(){
+        return (receiveQueue->queue.size() > 0);
+    }
+
+
     void TaskusThread::loop(){
         while(true){
+            auto& tmp = receiveQueue->queue;
             std::unique_lock<std::mutex> lk{receiveQueue->queueMutex};
-            receiveQueue->condVariable.wait(lk);
+            while(!getIfReceivedMessage()){
+                receiveQueue->condVariable.wait(lk);
+            }
+
             //after this we gain the lock on the queueMutex and we can alter everything we want
             MessageThreadQueue m = receiveQueue->queue.at(0);
             receiveQueue->queue.pop_front();

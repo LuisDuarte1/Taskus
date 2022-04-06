@@ -58,6 +58,7 @@ class distanceExampleTask : public Taskus::Task{
                 pow((points1[i*3 + 1]-points2[i*3 + 1]), 2)+
                 pow((points1[i*3 + 2]-points2[i*3 + 2]), 2)));
             }
+
         }
     private:
         std::vector<float> points1;
@@ -99,7 +100,20 @@ TEST(TaskPoolTest, RunDistanceSimpleTask){
     
 }
 
+class sleepDependantTask : public Taskus::Task{
+    public:
+        sleepDependantTask() : Task(){
 
+        }
+
+        void tryMutate(){
+            
+        }
+
+        void runTaskFunction(){
+            std::this_thread::sleep_for(std::chrono::seconds(2));
+        }
+};
 
 
 TEST(TaskPoolTest, RunDependentTasksTest){
@@ -116,5 +130,13 @@ TEST(TaskPoolTest, RunDependentTasksTest){
         0,0,0
     };
     distanceExampleTask * t = new distanceExampleTask(points1, points2);
-
+    sleepDependantTask * tt = new sleepDependantTask();
+    t->dependentTasks.emplace_back(tt);
+    tt->addDependencyTask(t);
+    tPool->addTask(t);
+    tt->waitToFinish();
+    std::cout << "I'm here \n";
+    tPool->stop();
+    delete t,tt,tPool;
+    
 }

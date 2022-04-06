@@ -31,7 +31,7 @@ namespace Taskus{
         private:
             std::string name;
             
-            
+            bool getIfReceivedMessage();
             
             InterThreadQueue * receiveQueue;
             TaskPool * masterPool;
