@@ -42,7 +42,6 @@ namespace Taskus{
             //if a task is supposed to call itself after it's done, this parameter should only be set
             //on the tasks with depth=0 (with no dependencies), which means that after we run the root
             //task and every other task, the TaskPool will ensure that everything is executed again.
-            //this is also aplicable in the subtasks (although not recommended because it can lead to a infinite loop)
             bool isRepeatable = false;
 
             //we need to add dependencies because the task can only run when the atomic bool finished changes to true on 
@@ -61,7 +60,6 @@ namespace Taskus{
             //it's just a identifier for debugging, and identifing if it was added later, nothing related to the functionallity of taskus
             bool isMutation = false; 
 
-            //TODO (luisd): overloading + for adding a dependent task
 
             void operator+=(Task * t1);
         protected:

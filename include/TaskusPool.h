@@ -11,6 +11,7 @@
 #include "ThreadMessage.h"
 #include "TaskValidator.h"
 #include "TaskusThread.h"
+#include "internal_tasks/repeatTask.h"
 #include "TaskusTask.h"
 
 namespace Taskus{
@@ -26,7 +27,8 @@ namespace Taskus{
 
             void addTask(Task * newTask);
 
-            void finishedTask(Task * task);
+            void finishedTask(Task * task, int id);
+
 
 
         private:

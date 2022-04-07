@@ -16,7 +16,7 @@ namespace Taskus{
     class TaskusThread{
         public:
         
-            TaskusThread(std::string nname, InterThreadQueue * recv_queue, TaskPool * tPool);
+            TaskusThread(int nname, InterThreadQueue * recv_queue, TaskPool * tPool);
 
             void startThread();
 
@@ -24,12 +24,12 @@ namespace Taskus{
 
             void loop();
             
-            inline std::string getThreadName(){return name;};
+            inline int getThreadName(){return name;};
             inline bool getIfBusy(){return is_busy.load();};
 
 
         private:
-            std::string name;
+            int name;
             
             bool getIfReceivedMessage();
             

@@ -11,7 +11,11 @@ namespace Taskus{
         for(int i = 0; i < dependenciesTasks.size(); i++){
             dependenciesTasks[i]->waitToFinish();
         }
-        //TODO: before running function aquire them all
+        for(int i = 0; i < MAX_DEPENDENT_TASKS; i++){
+            if(!finishedSemaphore.try_acquire()){
+                break;
+            }
+        }
         //run function
         #ifdef PROFILING_ENABLED
             start = std::chrono::high_resolution_clock::now();

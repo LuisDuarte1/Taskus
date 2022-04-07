@@ -3,7 +3,7 @@
 
 
 namespace Taskus{
-    TaskusThread::TaskusThread(std::string nname, InterThreadQueue * recv_queue, TaskPool * tPool)
+    TaskusThread::TaskusThread(int nname, InterThreadQueue * recv_queue, TaskPool * tPool)
     {
         name = nname;
         receiveQueue = recv_queue;
@@ -46,7 +46,7 @@ namespace Taskus{
                 for(int i = 0; i < m.numTasks; i++){
                     m.tasksToRun[i].tryMutate();
                     m.tasksToRun[i].runTask(); 
-                    masterPool->finishedTask(&(m.tasksToRun[i]));
+                    masterPool->finishedTask(&(m.tasksToRun[i]), name);
                     
                 }
                 break;

@@ -111,6 +111,7 @@ class sleepDependantTask : public Taskus::Task{
         }
 
         void runTaskFunction(){
+            std::cout << "In sleep task";
             std::this_thread::sleep_for(std::chrono::seconds(2));
         }
 };
@@ -138,4 +139,54 @@ TEST(TaskPoolTest, RunDependentTasksTest){
     tPool->stop();
     delete t,tt,tPool;
     
+}
+
+
+class repeatTimesTask : public Taskus::Task{
+    public:
+        repeatTimesTask() : Task(){
+            isRepeatable = true;
+        }
+        void tryMutate(){
+
+        }
+        void runTaskFunction(){
+            std::cout << "Running task for the " << n << "th time\n";
+            n -= 1;
+            if(n <= 0) isRepeatable = false;
+            std::this_thread::sleep_for(std::chrono::milliseconds(200));
+        }
+
+        int getNumberIterations(){return n;};
+        
+    private:
+        int n = 5;
+        
+};
+
+
+TEST(TaskPoolTest, RunRepeatableTaskSimple){
+    Taskus::TaskPool * tPool = new Taskus::TaskPool();
+    tPool->start();
+    repeatTimesTask * t = new repeatTimesTask();
+    tPool->addTask(t);
+    std::this_thread::sleep_for(std::chrono::seconds(5));
+    ASSERT_LE(t->getNumberIterations(),0);
+    tPool->stop();
+    delete t,tPool;
+
+}
+
+TEST(TaskPoolTest, RunRepeatableTaskDerivated){
+    Taskus::TaskPool * tPool = new Taskus::TaskPool();
+    tPool->start();
+    repeatTimesTask * t = new repeatTimesTask();
+    repeatTimesTask * tt = new repeatTimesTask();
+    tt->isRepeatable = false;
+    *t += tt;
+    tPool->addTask(t);
+    std::this_thread::sleep_for(std::chrono::seconds(5));
+    ASSERT_LE(tt->getNumberIterations(),0);
+    tPool->stop();
+    delete t,tPool;
 }

@@ -10,7 +10,7 @@ TaskPool::TaskPool(){
         threadDeques.resize(threadDeques.size() + 1);
         threadDeques[threadDeques.size()-1] = new InterThreadQueue();
 
-        TaskusThread * t = new TaskusThread(std::to_string(i), threadDeques[threadDeques.size()-1], this); 
+        TaskusThread * t = new TaskusThread(i, threadDeques[threadDeques.size()-1], this); 
 
         threads.emplace_back(t);
         tasksRunning.push_back({});
@@ -55,9 +55,13 @@ void TaskPool::stop(){
 void TaskPool::addTaskNoValidation(Task * newTask){
     tasksRunningMutex.lock();
     //first we will find the best thread for this task (for now it's the minimum)
-    int thread_id = tasksRunning[0].size();
+    int thread_id = 0;
+    int last_size = tasksRunning[0].size();
     for(int i = 1; i < threads.size(); i++){
-        if(tasksRunning[i].size() < thread_id) thread_id = i;
+        if(tasksRunning[i].size() < last_size) {
+            thread_id = i;
+            last_size = tasksRunning[i].size();
+        }
     }
     //now we will add the current task to this id
     //create message
@@ -106,16 +110,19 @@ void TaskPool::addTask(Task * newTask){
         std::cout << "Couldn't validate this task, will not add it to the pool" << "\n";
         return;
     }
-    //TODO (luisd): if is_repeatable make a pseudo task that waits for the end tasks to run and
-    //repeat the process
     mutateTask(newTask);
     addTaskNoValidation(newTask);
+    if(newTask->isRepeatable){
+        //FIXME: this result in a memory leak, if we dont use the todo caching system
+        internalRepeatTask * t = new internalRepeatTask(newTask, this);
+        addTaskNoValidation(t);
+    }
 }
 
-void TaskPool::finishedTask(Task * task){
+void TaskPool::finishedTask(Task * task, int id){
+    int i = id;
     tasksRunningMutex.lock();
     bool found = false;
-    for(int i = 0; i < tasksRunning.size(); i++){
         for(int e = 0; e < tasksRunning[i].size();e++){
             if(tasksRunning[i][e] == task){
                 tasksRunning[i].erase(tasksRunning[i].begin() + e);
@@ -123,9 +130,8 @@ void TaskPool::finishedTask(Task * task){
                 break;
             }
         }
-    }
     if(!found){
-        throw std::runtime_error("Couldn't find the task to remove it from tasksRunning...");
+        throw std::runtime_error("Couldn't find the task to remove it from tasksRunning in this thread...");
     }
     tasksRunningMutex.unlock();
 
