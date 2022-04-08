@@ -13,6 +13,7 @@
 #include "TaskusThread.h"
 #include "internal_tasks/repeatTask.h"
 #include "TaskusTask.h"
+#include "internal_tasks/internalTaskCache.h"
 
 namespace Taskus{
 
@@ -21,6 +22,7 @@ namespace Taskus{
     class TaskPool{
         public:
             TaskPool();
+            ~TaskPool();
             
             void start(); 
             void stop(); //blocking function, waits for all threads to join 
@@ -41,6 +43,8 @@ namespace Taskus{
             std::vector<std::vector<Task*>> tasksRunning;
 
             std::vector<TaskusThread * > threads;
+
+            InternalTaskCache * internalCache;
             
 
             //for every thread it should be created one deques to allow interthread communication

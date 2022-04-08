@@ -96,7 +96,8 @@ TEST(TaskPoolTest, RunDistanceSimpleTask){
         EXPECT_FLOAT_EQ(result[i], t->result[i]) 
         << "Expected: " << result[i] << " and got: " << t->result[i] << " at index: " << i << "\n";
     }
-    delete t,tPool;
+    delete t;
+    delete tPool;
     
 }
 
@@ -137,7 +138,9 @@ TEST(TaskPoolTest, RunDependentTasksTest){
     tt->waitToFinish();
     std::cout << "I'm here \n";
     tPool->stop();
-    delete t,tt,tPool;
+    delete t;
+    delete tt;
+    delete tPool;
     
 }
 
@@ -154,7 +157,7 @@ class repeatTimesTask : public Taskus::Task{
             std::cout << "Running task for the " << n << "th time\n";
             n -= 1;
             if(n <= 0) isRepeatable = false;
-            std::this_thread::sleep_for(std::chrono::milliseconds(200));
+            std::this_thread::sleep_for(std::chrono::milliseconds(250));
         }
 
         int getNumberIterations(){return n;};
@@ -173,7 +176,8 @@ TEST(TaskPoolTest, RunRepeatableTaskSimple){
     std::this_thread::sleep_for(std::chrono::seconds(5));
     ASSERT_LE(t->getNumberIterations(),0);
     tPool->stop();
-    delete t,tPool;
+    delete t;
+    delete tPool;
 
 }
 
@@ -188,5 +192,7 @@ TEST(TaskPoolTest, RunRepeatableTaskDerivated){
     std::this_thread::sleep_for(std::chrono::seconds(5));
     ASSERT_LE(tt->getNumberIterations(),0);
     tPool->stop();
-    delete t,tPool;
+    delete t;
+    delete tt;
+    delete tPool;
 }

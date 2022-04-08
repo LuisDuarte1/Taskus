@@ -17,6 +17,7 @@ namespace Taskus{
         public:
         
             TaskusThread(int nname, InterThreadQueue * recv_queue, TaskPool * tPool);
+            ~TaskusThread();
 
             void startThread();
 

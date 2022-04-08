@@ -50,7 +50,8 @@ TEST(TaskValidatorTests, IsRepeatableLeafTest){
     t->dependentTasks.push_back(tt);
     tt->addDependencyTask(t);
     Taskus::ValidationResultEnum result = Taskus::ValidateTask(t);
-    delete t, tt;
+    delete t;
+    delete tt;
     ASSERT_EQ(result, Taskus::ValidationResultEnum::REPEATABLE_NOT_ROOT);
 
 }
@@ -61,7 +62,8 @@ TEST(TaskValidatorTests, LeafDoesntHaveDependencies){
     test_dependencies * tt = new test_dependencies();
     t->dependentTasks.push_back(t);
     Taskus::ValidationResultEnum result = Taskus::ValidateTask(t);
-    delete t, tt;
+    delete t;
+    delete tt;
     ASSERT_EQ(result, Taskus::ValidationResultEnum::NO_DEPENDENCIES_NOT_ROOT);
 
 
@@ -76,7 +78,8 @@ TEST(TaskValidatorTests, RootHasDependencies){
     t->dependentTasks.push_back(tt);
     tt->addDependencyTask(tt);
     Taskus::ValidationResultEnum result = Taskus::ValidateTask(t);
-    delete t, tt;
+    delete t;
+    delete tt;
     ASSERT_EQ(result, Taskus::ValidationResultEnum::DEPENDENCIES_AT_ROOT);
 }
 
@@ -85,7 +88,8 @@ TEST(TaskValidatorTests, FinalTaskHasMutation){
     test_dependencies * tt = new test_dependencies();
     t->mutationAddTask.push_back(tt);
     Taskus::ValidationResultEnum result = Taskus::ValidateTask(t);
-    delete t,tt;
+    delete t;
+    delete tt;
     ASSERT_EQ(result, Taskus::ValidationResultEnum::MUTATION_IN_FINAL_TASKS);
 
     
@@ -99,7 +103,9 @@ TEST(TaskValidatorTests, MutationDoesntLeadToDependant){
     ttt->isMutation = true;
     t->mutationAddTask.push_back(ttt);
     Taskus::ValidationResultEnum result = Taskus::ValidateTask(t);
-    delete t,tt,ttt;
+    delete t;
+    delete tt,
+    delete ttt;
     ASSERT_EQ(result, Taskus::ValidationResultEnum::MUTATION_DOEST_LEAD_TO_DEPENDANT);
 
 }
@@ -118,7 +124,10 @@ TEST(TaskValidatorTests, ValidMutation){
     tttt->isMutation = true;
     t->mutationAddTask.push_back(ttt);
     Taskus::ValidationResultEnum result = Taskus::ValidateTask(t);
-    delete t,tt,ttt,tttt;
+    delete t;
+    delete tt;
+    delete ttt;
+    delete tttt;
     ASSERT_EQ(result, Taskus::ValidationResultEnum::VALIDATION_PASSED);
     
 }
@@ -132,7 +141,9 @@ TEST(TaskValidatorTests, AddMutationDoesntHaveFlag){
     t->mutationAddTask.push_back(ttt);
     ttt->dependentTasks.push_back(tt);
     Taskus::ValidationResultEnum result = Taskus::ValidateTask(t);
-    delete t,tt,ttt;
+    delete t;
+    delete tt;
+    delete ttt;
     ASSERT_EQ(result, Taskus::ValidationResultEnum::MUTATION_NOT_MARKED_AS_ONE);
 }
 
@@ -148,6 +159,9 @@ TEST(TaskValidatorTests, MutationsCantHaveMutations){
     ttt->dependentTasks.push_back(tt);
     ttt->mutationAddTask.push_back(tttt);
     Taskus::ValidationResultEnum result = Taskus::ValidateTask(t);
-    delete t,tt,ttt,tttt;
+    delete t;
+    delete tt;
+    delete ttt;
+    delete tttt;
     ASSERT_EQ(result, Taskus::ValidationResultEnum::MUTATION_HAS_MUTATIONS_TO_ADD_OR_REMOVE); 
 }

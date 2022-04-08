@@ -5,7 +5,6 @@ namespace Taskus{
 
     }
 
-
     void Task::runTask(){
         //wait for dependencies
         for(int i = 0; i < dependenciesTasks.size(); i++){
@@ -21,7 +20,8 @@ namespace Taskus{
             start = std::chrono::high_resolution_clock::now();
             runTaskFunction();
             stop = std::chrono::high_resolution_clock::now();
-            timesTookExecuteTask.push_back(std::chrono::duration_cast<std::chrono::milliseconds>(stop-start).count());
+            unsigned long long e = std::chrono::duration_cast<std::chrono::milliseconds>(stop-start).count();
+            timesTookExecuteTask.push_back(e);
         #else
             runTaskFunction();
         #endif
@@ -60,8 +60,12 @@ namespace Taskus{
     }
 
 
-    
+
+    Task::~Task(){
+        
+    }
 
     
 }
+
 

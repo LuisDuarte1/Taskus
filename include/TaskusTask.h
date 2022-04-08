@@ -9,7 +9,8 @@
 #include <atomic>
 #include <semaphore>
 
-#define PROFILING_ENABLED 1
+
+//#define PROFILING_ENABLED 1
 
 #define MAX_DEPENDENT_TASKS 32
 
@@ -24,8 +25,10 @@ namespace Taskus{
 
         public:
             Task();
+            virtual ~Task();
 
             void runTask();
+
             virtual void tryMutate() = 0;
 
 
@@ -34,6 +37,8 @@ namespace Taskus{
             //this function HAS to be overriden on the child class 
             //Must change finished to true in the end
             virtual void runTaskFunction() = 0; 
+
+            
 
             //a task is considered final when it has zero dependentTasks
             std::vector<Task*> dependentTasks; 
@@ -79,6 +84,7 @@ namespace Taskus{
 
 
 
+
             std::vector<Task*> dependenciesTasks;
 
             std::counting_semaphore<MAX_DEPENDENT_TASKS> finishedSemaphore{0};
@@ -86,7 +92,7 @@ namespace Taskus{
 
             //this can be disabled in release builds to save a bit of processing
             #ifdef PROFILING_ENABLED
-                std::vector<uint64_t> timesTookExecuteTask;
+                std::vector<unsigned long long> timesTookExecuteTask;
                 inline uint64_t getLastExecutedTime(){if(timesTookExecuteTask.size()>1) return timesTookExecuteTask[timesTookExecuteTask.size()-1];};
                 //median should really only work when isRepeatable is true on the root task
                 uint64_t getMedianExecutedTime();

@@ -16,6 +16,7 @@ TaskPool::TaskPool(){
         tasksRunning.push_back({});
         
     }
+    internalCache = new InternalTaskCache();
 
 
 }
@@ -115,7 +116,10 @@ void TaskPool::addTask(Task * newTask){
     if(newTask->isRepeatable){
         //FIXME: this result in a memory leak, if we dont use the todo caching system
         internalRepeatTask * t = new internalRepeatTask(newTask, this);
-        addTaskNoValidation(t);
+        internalTask * tt = t;
+        internalCache->InsertInternalItem(&tt);
+
+        addTaskNoValidation(tt);
     }
 }
 
@@ -135,6 +139,21 @@ void TaskPool::finishedTask(Task * task, int id){
     }
     tasksRunningMutex.unlock();
 
+}
+
+TaskPool::~TaskPool(){
+    delete internalCache;
+    for(int i = 0; i < threads.size(); i++){
+        delete threads[i];
+    }
+    threads.clear();
+    for(int i = 0; i < threadDeques.size(); i++){
+        delete threadDeques[i];
+    }
+
+    for(int i = 0; i < tasksRunning.size(); i++){
+        tasksRunning[i].clear();
+    }
 }
 
 }

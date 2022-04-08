@@ -60,4 +60,8 @@ namespace Taskus{
     void TaskusThread::startThread(){
         thisThread = new std::thread([this]{loop();});
     }
+
+    TaskusThread::~TaskusThread(){
+        delete thisThread;
+    }
 }
