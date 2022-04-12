@@ -9,8 +9,9 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 #use address sanitizer on debug mode
-set (CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -fsanitize=address")
-
+if(UNIX)
+  set (CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -fsanitize=address")
+endif(UNIX)
 #get source files
 #it's not optimal to get the sources files using glob recurse but it's the best way I think in this case
 #if anything, we have to delete build and rebuild it 

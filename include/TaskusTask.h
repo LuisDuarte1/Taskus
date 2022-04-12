@@ -10,7 +10,7 @@
 #include <semaphore>
 
 
-//#define PROFILING_ENABLED 1
+#define MAX_TIME_ARRAY_SIZE 1000
 
 #define MAX_DEPENDENT_TASKS 32
 
@@ -90,15 +90,13 @@ namespace Taskus{
             std::counting_semaphore<MAX_DEPENDENT_TASKS> finishedSemaphore{0};
 
 
-            //this can be disabled in release builds to save a bit of processing
-            #ifdef PROFILING_ENABLED
-                std::vector<unsigned long long> timesTookExecuteTask;
-                inline uint64_t getLastExecutedTime(){if(timesTookExecuteTask.size()>1) return timesTookExecuteTask[timesTookExecuteTask.size()-1];};
-                //median should really only work when isRepeatable is true on the root task
-                uint64_t getMedianExecutedTime();
-                std::chrono::time_point<std::chrono::high_resolution_clock> start;
-                std::chrono::time_point<std::chrono::high_resolution_clock> stop;
-            #endif
+            unsigned long long timesTookExecuteTask[MAX_TIME_ARRAY_SIZE] = {};
+            size_t timesSize = 0;
+            inline uint64_t getLastExecutedTime(){if(timesSize>1) return timesTookExecuteTask[timesSize-1];};
+            //median should really only work when isRepeatable is true on the root task
+            uint64_t getMedianExecutedTime();
+            std::chrono::time_point<std::chrono::high_resolution_clock> start;
+            std::chrono::time_point<std::chrono::high_resolution_clock> stop;
     };
 }
 

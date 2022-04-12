@@ -14,7 +14,6 @@ class test_dependencies_task : public Taskus::Task{
 
 TEST(InternalTaskCacheTest, MissFirstElementTest){
     Taskus::InternalTaskCache *tcache = new Taskus::InternalTaskCache();
-    tcache = new Taskus::InternalTaskCache();
 
     test_dependencies_task * task = new test_dependencies_task();
     Taskus::internalRepeatTask * t = new Taskus::internalRepeatTask(task, nullptr);
