@@ -6,6 +6,7 @@
 #include <vector>
 #include <array>
 #include <string>
+#include <list>
 #include <stdexcept>
 
 #include "ThreadMessage.h"
@@ -13,7 +14,7 @@
 #include "TaskusThread.h"
 #include "internal_tasks/repeatTask.h"
 #include "TaskusTask.h"
-#include "internal_tasks/internalTaskCache.h"
+#include "internal_tasks/InternalTaskManager.h"
 
 namespace Taskus{
 
@@ -29,8 +30,7 @@ namespace Taskus{
 
             void addTask(Task * newTask);
 
-            void finishedTask(Task * task, int id);
-
+            Task * tryObtainNewTask();
 
 
         private:
@@ -39,21 +39,19 @@ namespace Taskus{
 
             void mutateTask(Task * taskToMutate);
 
-            std::mutex tasksRunningMutex;
-            std::vector<std::vector<Task*>> tasksRunning;
+            std::mutex tasksToRunMutex;
+            std::list<Task *> tasksToRun;
 
             std::vector<TaskusThread * > threads;
 
-            InternalTaskCache * internalCache;
+            InternalTaskManager * internalCache;
             
 
             //for every thread it should be created one deques to allow interthread communication
             //it represents communication in direction TaskPool -> TaskusThread, the other direction should be
             //made with functions referencing this class 
             std::vector<InterThreadQueue *> threadDeques;
-
         
-
     };
 
 

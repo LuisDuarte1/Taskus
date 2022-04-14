@@ -13,10 +13,9 @@ TaskPool::TaskPool(){
         TaskusThread * t = new TaskusThread(i, threadDeques[threadDeques.size()-1], this); 
 
         threads.emplace_back(t);
-        tasksRunning.push_back({});
         
     }
-    internalCache = new InternalTaskCache();
+    internalCache = new InternalTaskManager();
 
 
 }
@@ -53,34 +52,30 @@ void TaskPool::stop(){
     }
 }
 
-void TaskPool::addTaskNoValidation(Task * newTask){
-    tasksRunningMutex.lock();
-    //first we will find the best thread for this task (for now it's the minimum)
-    int thread_id = 0;
-    int last_size = tasksRunning[0].size();
-    for(int i = 1; i < threads.size(); i++){
-        if(tasksRunning[i].size() < last_size) {
-            thread_id = i;
-            last_size = tasksRunning[i].size();
-        }
-    }
-    //now we will add the current task to this id
-    //create message
-    threadDeques[thread_id]->queueMutex.lock();
-    MessageThreadQueue m;
-    m.mType = START_TASK;
-    m.numTasks = 1;
-    m.tasksToRun = newTask;
-    m.priority = 0;
-    //send message to thread
-    threadDeques[thread_id]->queue.push_front(m);
-    threadDeques[thread_id]->queueMutex.unlock();
-    //notify thread
-    threadDeques[thread_id]->condVariable.notify_one();
-    //add task to tasksrunnign
-    tasksRunning[thread_id].push_back(newTask);
 
-    tasksRunningMutex.unlock();
+void TaskPool::addTaskNoValidation(Task * newTask){
+    tasksToRunMutex.lock();
+    //add task to tasksrunnign
+    tasksToRun.push_back(newTask);
+
+    //notify all threads
+    for(int thread_id = 0; thread_id < threads.size(); thread_id++){
+        //now we will add the current task to this id
+        //create message
+        threadDeques[thread_id]->queueMutex.lock();
+        MessageThreadQueue m;
+        m.mType = TASK_AVAILABLE;
+        m.priority = 0;
+        //send message to thread
+        threadDeques[thread_id]->queue.push_front(m);
+        threadDeques[thread_id]->queueMutex.unlock();
+        //notify thread
+        threadDeques[thread_id]->condVariable.notify_one();
+    }
+
+
+
+    tasksToRunMutex.unlock();
     //add the dependants
     for(int i = 0; i < newTask->dependentTasks.size(); i++)
         addTaskNoValidation(newTask->dependentTasks[i]);
@@ -114,7 +109,6 @@ void TaskPool::addTask(Task * newTask){
     mutateTask(newTask);
     addTaskNoValidation(newTask);
     if(newTask->isRepeatable){
-        //FIXME: this result in a memory leak, if we dont use the todo caching system
         internalRepeatTask * t = new internalRepeatTask(newTask, this);
         internalTask * tt = t;
         internalCache->InsertInternalItem(&tt);
@@ -123,23 +117,20 @@ void TaskPool::addTask(Task * newTask){
     }
 }
 
-void TaskPool::finishedTask(Task * task, int id){
-    int i = id;
-    tasksRunningMutex.lock();
-    bool found = false;
-        for(int e = 0; e < tasksRunning[i].size();e++){
-            if(tasksRunning[i][e] == task){
-                tasksRunning[i].erase(tasksRunning[i].begin() + e);
-                found = true;
-                break;
-            }
-        }
-    if(!found){
-        throw std::runtime_error("Couldn't find the task to remove it from tasksRunning in this thread...");
-    }
-    tasksRunningMutex.unlock();
+Task * TaskPool::tryObtainNewTask(){
+    tasksToRunMutex.lock();
+    if(tasksToRun.size() == 0){
+        tasksToRunMutex.unlock();
+        return nullptr;
+    } 
 
+    Task * firstTask = *tasksToRun.begin();
+    tasksToRun.pop_front();
+    tasksToRunMutex.unlock();
+    return firstTask;
 }
+
+
 
 TaskPool::~TaskPool(){
     delete internalCache;
@@ -150,10 +141,7 @@ TaskPool::~TaskPool(){
     for(int i = 0; i < threadDeques.size(); i++){
         delete threadDeques[i];
     }
-
-    for(int i = 0; i < tasksRunning.size(); i++){
-        tasksRunning[i].clear();
-    }
+    tasksToRun.clear();
 }
 
 }

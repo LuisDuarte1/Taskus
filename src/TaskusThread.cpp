@@ -42,15 +42,11 @@ namespace Taskus{
             case QUIT_THREAD:
                 quit = true;
                 break;
-            case START_TASK:
-                for(int i = 0; i < m.numTasks; i++){
-                    m.tasksToRun[i].tryMutate();
-                    m.tasksToRun[i].runTask(); 
-                    masterPool->finishedTask(&(m.tasksToRun[i]), name);
-                    
-                }
-                break;
-            default:
+            case TASK_AVAILABLE:
+                Task * newTask = masterPool->tryObtainNewTask();
+                if(newTask == nullptr) break;
+                newTask->tryMutate();
+                newTask->runTask();
                 break;
             }
             if(quit) break; //exit the main loop which makes the thread joinable by the system

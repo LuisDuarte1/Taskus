@@ -65,6 +65,10 @@ namespace Taskus{
             //it's just a identifier for debugging, and identifing if it was added later, nothing related to the functionallity of taskus
             bool isMutation = false; 
 
+            //median should really only work when isRepeatable is true on the root task
+            uint64_t getMedianExecutedTime();
+
+            void validateTaskToRun();
 
             void operator+=(Task * t1);
         protected:
@@ -84,17 +88,19 @@ namespace Taskus{
 
 
 
-
             std::vector<Task*> dependenciesTasks;
 
+            //FIXME: semaphores seem to be the issue here for some reason
+            //this funcionality could be replaced with a list of condition variables i guess
+            
             std::counting_semaphore<MAX_DEPENDENT_TASKS> finishedSemaphore{0};
+            std::atomic<bool> finished{false};
 
-
+            //time will be in microseconds for more accuracy
             unsigned long long timesTookExecuteTask[MAX_TIME_ARRAY_SIZE] = {};
             size_t timesSize = 0;
             inline uint64_t getLastExecutedTime(){if(timesSize>1) return timesTookExecuteTask[timesSize-1];};
-            //median should really only work when isRepeatable is true on the root task
-            uint64_t getMedianExecutedTime();
+
             std::chrono::time_point<std::chrono::high_resolution_clock> start;
             std::chrono::time_point<std::chrono::high_resolution_clock> stop;
     };

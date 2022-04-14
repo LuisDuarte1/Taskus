@@ -30,7 +30,6 @@ TEST(TaskPoolTest, StartAndStopTest) {
     
 }
 
-//TODO: run example task
 
 class distanceExampleTask : public Taskus::Task{
     public:
@@ -156,8 +155,11 @@ class repeatTimesTask : public Taskus::Task{
         void runTaskFunction(){
             std::cout << "Running task for the " << n << "th time\n";
             n -= 1;
+            for(int i = 0; i < 1000000; i++){
+                unsigned long long e = i*i;
+            }
+            std::this_thread::sleep_for(std::chrono::milliseconds(300));
             if(n <= 0) isRepeatable = false;
-            std::this_thread::sleep_for(std::chrono::milliseconds(250));
         }
 
         int getNumberIterations(){return n;};
