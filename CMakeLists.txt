@@ -8,9 +8,28 @@ endif()
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-#use address sanitizer on debug mode
 if(UNIX)
+  #use address sanitizer on debug mode
   set (CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -fsanitize=address")
+
+  #force using mold in linux, it's wayy faster
+  find_program(MOLD_EXISTS "mold")
+  if(MOLD_EXISTS)
+    if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+      set(CMAKE_CXX_FLAGS "-fuse-ld=mold ${CMAKE_CXX_FLAGS}")
+    elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+      #this assumes a correct instalation of mold
+      #only gcc 12.1.0 onwards (which is a future release for the moment) will suport -fuse-ld=mold
+      set(CMAKE_CXX_FLAGS "-B/usr/local/libexec/mold ${CMAKE_CXX_FLAGS}")
+    else()
+      message(FATAL_ERROR "Using a unsupported compiler for mold.")
+    endif()
+
+
+  else()
+    message(FATAL_ERROR "Couldn't find mold linker.")
+  endif(MOLD_EXISTS)
+  
 endif(UNIX)
 #get source files
 #it's not optimal to get the sources files using glob recurse but it's the best way I think in this case
