@@ -4,36 +4,60 @@ namespace Taskus{
     InternalTaskManager::InternalTaskManager(){
 
     }
-    int InternalTaskManager::FindInternalTask(internalTask ** t){
-        int i = 0;
-        bool found = false;
+    internalTask* InternalTaskManager::FindInternalTask(internalTask ** t){
         for(auto it = cache.begin(); it != cache.end(); it++){
-            if(*it == *t) {
-                found = true;
-                break;
+            if((*t)->cachingFunction() == (*it)->cachingFunction() && (*it)->taskValid.load()){
+                return (*it);
             }
-            i++;
         }
-        if(!found) return -1;
-        return i;
+        return nullptr;
     }
 
     bool InternalTaskManager::InsertInternalItem(internalTask ** newItem){
+        cacheMutex.lock();
         if(cache.size() == 0){
             cache.push_front(*newItem);
+            cacheMutex.unlock();
             return false;
         }
-        if(cache.size() < MAX_CACHE_SIZE){
-            if(FindInternalTask(newItem) == -1)cache.push_back(*newItem);
-            return false;
-        }
-        if(FindInternalTask(newItem) == -1){
-            internalTask * toremove = *(cache.rbegin());
-            delete toremove;
-            cache.pop_back();
-            cache.push_front(*newItem);
+        internalTask * t = FindInternalTask(newItem);
+        //if the caching function is the same but the pointer is not the same (to avoid double frees)
+        if(t != nullptr && t != (*newItem)){
+            delete *newItem;
+            *newItem = t;
+            cacheMutex.unlock();
             return true;
         }
+        if(t == (*newItem)){
+            cacheMutex.unlock();
+            return true;
+        }
+        //if not add it to the list if the list has not reached the max size yet
+        if(cache.size() < MAX_CACHE_SIZE){
+            cache.push_back(*newItem);
+            cacheMutex.unlock();
+            return false;            
+        }
+        //the list is full 
+        auto it = cache.begin();
+        internalTask * toremove = nullptr;
+
+        //so we go from the back and remove the first internalitem not being used no more (which means that the flag taskValid is false)
+        while (it != cache.end())
+        {
+            if((*it)->taskValid.load() == false){
+                toremove = *(it);
+                break;
+            }     
+            it++;           
+
+        }
+        if(*newItem != toremove && toremove != nullptr){
+            delete toremove;
+            cache.erase(it);
+            cache.push_front(*newItem); 
+        }
+        cacheMutex.unlock();
         return false;
 
     }

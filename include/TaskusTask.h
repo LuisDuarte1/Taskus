@@ -5,6 +5,7 @@
 #include <iostream>
 #include <vector>
 #include <chrono>
+#include <mutex>
 #include <thread>
 #include <atomic>
 #include <semaphore>
@@ -47,7 +48,7 @@ namespace Taskus{
             //if a task is supposed to call itself after it's done, this parameter should only be set
             //on the tasks with depth=0 (with no dependencies), which means that after we run the root
             //task and every other task, the TaskPool will ensure that everything is executed again.
-            bool isRepeatable = false;
+            std::atomic<bool> isRepeatable{false};
 
             //we need to add dependencies because the task can only run when the atomic bool finished changes to true on 
             //all of dependencies
@@ -70,7 +71,15 @@ namespace Taskus{
 
             void validateTaskToRun();
 
+            std::vector<Task*> dependenciesTasks;
+
+            //flag to prevent accident deletion in internalTasks
+            std::atomic<bool> taskValid{true};
+
+
+
             void operator+=(Task * t1);
+
         protected:
 
 
@@ -88,12 +97,8 @@ namespace Taskus{
 
 
 
-            std::vector<Task*> dependenciesTasks;
 
-            //FIXME: semaphores seem to be the issue here for some reason
-            //this funcionality could be replaced with a list of condition variables i guess
             
-            std::counting_semaphore<MAX_DEPENDENT_TASKS> finishedSemaphore{0};
             std::atomic<bool> finished{false};
 
             //time will be in microseconds for more accuracy

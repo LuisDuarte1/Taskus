@@ -15,6 +15,8 @@
 #include "internal_tasks/repeatTask.h"
 #include "TaskusTask.h"
 #include "internal_tasks/InternalTaskManager.h"
+#include "TaskusBranchTask.h"
+
 
 namespace Taskus{
 
@@ -31,6 +33,8 @@ namespace Taskus{
             void addTask(Task * newTask);
 
             Task * tryObtainNewTask();
+
+            void addRepeatingTask(Task * startTask, std::vector<Task*> endTasks);
 
 
         private:

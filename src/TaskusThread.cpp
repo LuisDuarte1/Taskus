@@ -30,9 +30,6 @@ namespace Taskus{
             receiveQueue->queue.pop_front();
 
             lk.unlock();
-            //we unlock prior to notifying because it doesnt make that much sense and it could run into some
-            //conflits ig
-            receiveQueue->condVariable.notify_one();
 
 
             //now we can process the message freely
@@ -45,8 +42,15 @@ namespace Taskus{
             case TASK_AVAILABLE:
                 Task * newTask = masterPool->tryObtainNewTask();
                 if(newTask == nullptr) break;
+                receiveQueue->threadBusy.store(true);
                 newTask->tryMutate();
                 newTask->runTask();
+                BranchTask * tryBranch = dynamic_cast<BranchTask*>(newTask);
+                if(tryBranch != nullptr){
+                    tryBranch->addBranchToTaskPool();
+                }
+                newTask->taskValid.store(false);
+                receiveQueue->threadBusy.store(false);
                 break;
             }
             if(quit) break; //exit the main loop which makes the thread joinable by the system

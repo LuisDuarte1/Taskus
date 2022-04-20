@@ -27,6 +27,7 @@ namespace Taskus{
         std::mutex queueMutex;
         std::deque<MessageThreadQueue> queue;
         std::condition_variable condVariable;
+        std::atomic<bool> threadBusy;
     };
 }
 

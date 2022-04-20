@@ -8,7 +8,6 @@
 
 
 namespace Taskus{
-    std::string hello_world();
 }
 
 

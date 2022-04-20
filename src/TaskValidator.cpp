@@ -1,4 +1,5 @@
 #include "TaskValidator.h"
+#include "TaskusBranchTask.h"
 
 
 namespace Taskus{
@@ -36,8 +37,32 @@ namespace Taskus{
         return VALIDATION_PASSED;
     }
 
+    ValidationResultEnum ValidateBranchTask(BranchTask * brancht, int depth){
+        if(brancht->dependentTasks.size() != 0) return BRANCH_TASK_HAS_DEPENDANT_TASKS;
+        if(brancht->getAmountOfBranches() == 0) return BRANCH_TASK_HAS_NO_BRANCHES;
+        if(brancht->mutationAddTask.size() != 0) return BRANCH_TASK_HAS_MUTATIONS;
+        if(brancht->mutationRemoveTask.size() != 0) return BRANCH_TASK_HAS_MUTATIONS;
+        for(int i = 0; i < brancht->getAmountOfBranches() == 0; i++){
+            for(int e = 0; e < brancht->possibleBranches[i].size(); e++){
+                ValidationResultEnum v = ValidateTask(brancht->possibleBranches[i][e], ++depth);
+                if(v != VALIDATION_PASSED) return v;
+            }
+        }
+        return VALIDATION_PASSED;
+
+    }
+
     ValidationResultEnum ValidateTask(Task * task, int depth){
-        if(task->isRepeatable && depth != 0) return REPEATABLE_NOT_ROOT;
+        BranchTask * tryTransformBranch = dynamic_cast<BranchTask*>(task);
+    
+        if(tryTransformBranch != nullptr) {
+            ValidationResultEnum v = ValidateBranchTask(tryTransformBranch, ++depth);
+            if(v != VALIDATION_PASSED) return v;
+
+        } else{
+            //the only exception is that branchtasks can be repeatable at not root
+            if(task->isRepeatable.load() && depth != 0) return REPEATABLE_NOT_ROOT;
+        }
         if(task->getDependenciesSize() == 0 && depth != 0) return NO_DEPENDENCIES_NOT_ROOT;
         if(task->getDependenciesSize() != 0 && depth == 0) return DEPENDENCIES_AT_ROOT;
         if(task->mutationAddTask.size() != 0 && task->dependentTasks.size() == 0) return MUTATION_IN_FINAL_TASKS;
@@ -68,3 +93,4 @@ namespace Taskus{
     }
 
 }
+//test

@@ -112,7 +112,7 @@ class sleepDependantTask : public Taskus::Task{
 
         void runTaskFunction(){
             std::cout << "In sleep task";
-            std::this_thread::sleep_for(std::chrono::seconds(2));
+            std::this_thread::sleep_for(std::chrono::milliseconds(250));
         }
 };
 
@@ -147,7 +147,7 @@ TEST(TaskPoolTest, RunDependentTasksTest){
 class repeatTimesTask : public Taskus::Task{
     public:
         repeatTimesTask() : Task(){
-            isRepeatable = true;
+            isRepeatable.store(true);
         }
         void tryMutate(){
 
@@ -158,8 +158,7 @@ class repeatTimesTask : public Taskus::Task{
             for(int i = 0; i < 1000000; i++){
                 unsigned long long e = i*i;
             }
-            std::this_thread::sleep_for(std::chrono::milliseconds(300));
-            if(n <= 0) isRepeatable = false;
+            if(n <= 0) isRepeatable.store(false);
         }
 
         int getNumberIterations(){return n;};
@@ -175,9 +174,8 @@ TEST(TaskPoolTest, RunRepeatableTaskSimple){
     tPool->start();
     repeatTimesTask * t = new repeatTimesTask();
     tPool->addTask(t);
-    std::this_thread::sleep_for(std::chrono::seconds(5));
-    ASSERT_LE(t->getNumberIterations(),0);
     tPool->stop();
+    ASSERT_LE(t->getNumberIterations(),0);
     delete t;
     delete tPool;
 
@@ -188,12 +186,11 @@ TEST(TaskPoolTest, RunRepeatableTaskDerivated){
     tPool->start();
     repeatTimesTask * t = new repeatTimesTask();
     repeatTimesTask * tt = new repeatTimesTask();
-    tt->isRepeatable = false;
+    tt->isRepeatable.store(false);
     *t += tt;
     tPool->addTask(t);
-    std::this_thread::sleep_for(std::chrono::seconds(5));
-    ASSERT_LE(tt->getNumberIterations(),0);
     tPool->stop();
+    ASSERT_LE(tt->getNumberIterations(),0);
     delete t;
     delete tt;
     delete tPool;

@@ -11,8 +11,12 @@ class TaskPool;
 class internalRepeatTask : public internalTask{
     public:
         internalRepeatTask(Task * nstartTask, TaskPool * nmPool);
+        internalRepeatTask(Task * nstartTask,std::vector<Task*> nendTasks, TaskPool * nmPool);
+
         void tryMutate();
         void runTaskFunction();
+        std::vector<char> cachingFunction();
+
 
     private:
         TaskPool * mPool;
@@ -20,6 +24,7 @@ class internalRepeatTask : public internalTask{
         Task * startTask;
         void findEndTasks(Task * stask);
         
+
 
         
 };

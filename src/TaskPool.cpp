@@ -29,6 +29,34 @@ void TaskPool::start(){
 }
 
 void TaskPool::stop(){
+    //we only stop when the queuepool is empty and all the threads are doing nothing, this will prevent
+    //exiting before all tasks have stopped (the queue can be empty but there could be a thread that
+    // adds to another)
+    while (true)
+    {
+        tasksToRunMutex.lock();
+        if(tasksToRun.size() == 0){
+            bool thread_busy = false;
+            for(int i = 0; i < threadDeques.size(); i++){
+                if(threadDeques[i]->threadBusy.load()){
+                    thread_busy = true;
+                    break;
+                }
+            }
+            if(!thread_busy) {
+                tasksToRunMutex.unlock();
+                break;
+            }
+        }
+
+        tasksToRunMutex.unlock();
+        std::this_thread::yield();
+
+    }
+    
+    while(tasksToRun.size()){
+    }
+
     //to stop a thread, first we need to send a message to it, to break the main loop and make it joinable
     for(int i = 0; i < threads.size(); i++){
         //first we gain the lock
@@ -39,10 +67,9 @@ void TaskPool::stop(){
         msg.priority = 0;
         //send the message in the deque
         threadDeques[i]->queue.push_back(msg);
+
+        threadDeques[i]->condVariable.notify_one(); //aparently we should notify and unlock not the other way around
         threadDeques[i]->queueMutex.unlock();
-        //again, we notify the thread that we have put a message, after unlocking the mutex to avoid wierd
-        //parallelism issues
-        threadDeques[i]->condVariable.notify_one();
 
         threads[i]->thisThread->join();
 
@@ -55,6 +82,7 @@ void TaskPool::stop(){
 
 void TaskPool::addTaskNoValidation(Task * newTask){
     tasksToRunMutex.lock();
+    newTask->taskValid.store(true);
     //add task to tasksrunnign
     tasksToRun.push_back(newTask);
 
@@ -68,9 +96,9 @@ void TaskPool::addTaskNoValidation(Task * newTask){
         m.priority = 0;
         //send message to thread
         threadDeques[thread_id]->queue.push_front(m);
-        threadDeques[thread_id]->queueMutex.unlock();
         //notify thread
         threadDeques[thread_id]->condVariable.notify_one();
+        threadDeques[thread_id]->queueMutex.unlock();
     }
 
 
@@ -108,12 +136,13 @@ void TaskPool::addTask(Task * newTask){
     }
     mutateTask(newTask);
     addTaskNoValidation(newTask);
-    if(newTask->isRepeatable){
+    BranchTask * trycast = dynamic_cast<BranchTask*>(newTask);
+    if(newTask->isRepeatable.load() && trycast == nullptr){
         internalRepeatTask * t = new internalRepeatTask(newTask, this);
-        internalTask * tt = t;
-        internalCache->InsertInternalItem(&tt);
+        internalTask ** tt = (internalTask**)&t;
+        internalCache->InsertInternalItem(tt);
 
-        addTaskNoValidation(tt);
+        addTaskNoValidation(*tt);
     }
 }
 
@@ -132,6 +161,7 @@ Task * TaskPool::tryObtainNewTask(){
 
 
 
+
 TaskPool::~TaskPool(){
     delete internalCache;
     for(int i = 0; i < threads.size(); i++){
@@ -143,5 +173,14 @@ TaskPool::~TaskPool(){
     }
     tasksToRun.clear();
 }
+
+void TaskPool::addRepeatingTask(Task * startTask, std::vector<Task*> endTasks){
+    internalRepeatTask * t = new internalRepeatTask(startTask, endTasks,this);
+        internalTask ** tt = (internalTask**)&t;
+        internalCache->InsertInternalItem(tt);
+
+        addTaskNoValidation(*tt);
+}
+
 
 }

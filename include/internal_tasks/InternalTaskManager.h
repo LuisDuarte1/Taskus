@@ -4,8 +4,11 @@
 #include <iostream>
 #include <list>
 #include <iterator>
+#include <mutex>
+#include <stdexcept>
 
 #include "internalTask.h"
+
 
 
 #define MAX_CACHE_SIZE 10
@@ -20,7 +23,8 @@ namespace Taskus{
         
         private:
             std::list<internalTask *> cache;
-            int FindInternalTask(internalTask **t);
+            std::mutex cacheMutex;
+            internalTask* FindInternalTask(internalTask **t);
     };
 }
 
