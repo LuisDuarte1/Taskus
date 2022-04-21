@@ -97,7 +97,9 @@ if(TASKUS_BUILD_BENCHMARKS)
     set_target_properties(${filename} PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bench")
 
   endforeach(file ${BENCH_FILES})
-  
+  include(ProcessorCount)
+  ProcessorCount(NCPU)
+  file(WRITE "${CMAKE_BINARY_DIR}/bench/Makefile" "all:\n\tcd .. && make -j${NCPU}")
 endif(TASKUS_BUILD_BENCHMARKS)
 
 
