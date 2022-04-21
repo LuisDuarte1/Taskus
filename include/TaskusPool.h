@@ -25,6 +25,7 @@ namespace Taskus{
     class TaskPool{
         public:
             TaskPool();
+            TaskPool(int nthreads);
             ~TaskPool();
             
             void start(); 
@@ -35,6 +36,10 @@ namespace Taskus{
             Task * tryObtainNewTask();
 
             void addRepeatingTask(Task * startTask, std::vector<Task*> endTasks);
+
+            inline static int getMaxNumOfThreads(){return std::thread::hardware_concurrency();};
+
+            inline int getNumOfThreads(){return threads.size();};
 
 
         private:

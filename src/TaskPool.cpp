@@ -20,6 +20,22 @@ TaskPool::TaskPool(){
 
 }
 
+TaskPool::TaskPool(int nthreads){
+    if(nthreads > getMaxNumOfThreads()) throw std::runtime_error("The number of threads given is bigger than the number of threads the CPU has.");
+    int n = nthreads;
+    std::cout << "Number of threads: " << n << "\n";
+    for(int i = 0; i < n; i++){
+        threadDeques.resize(threadDeques.size() + 1);
+        threadDeques[threadDeques.size()-1] = new InterThreadQueue();
+
+        TaskusThread * t = new TaskusThread(i, threadDeques[threadDeques.size()-1], this); 
+
+        threads.emplace_back(t);
+        
+    }
+    internalCache = new InternalTaskManager();
+}
+
 
 void TaskPool::start(){
     //this will start all threads that are in the list
