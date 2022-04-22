@@ -52,22 +52,21 @@ void TaskPool::stop(){
     {
         tasksToRunMutex.lock();
         if(tasksToRun.size() == 0){
-            bool thread_busy = false;
+            tasksToRunMutex.unlock();
+
             for(int i = 0; i < threadDeques.size(); i++){
-                if(threadDeques[i]->threadBusy.load()){
-                    thread_busy = true;
-                    break;
-                }
+                threadDeques[i]->threadBusy.wait(true);
             }
-            if(!thread_busy) {
+            tasksToRunMutex.lock();
+            if(tasksToRun.size() == 0) {
                 tasksToRunMutex.unlock();
                 break;
             }
+            tasksToRunMutex.unlock();
+            continue;
         }
 
         tasksToRunMutex.unlock();
-        std::this_thread::yield();
-
     }
     
     while(tasksToRun.size()){
@@ -97,8 +96,12 @@ void TaskPool::stop(){
 
 
 void TaskPool::addTaskNoValidation(Task * newTask){
-    tasksToRunMutex.lock();
     newTask->taskValid.store(true);
+    for(auto it = tasksToRun.begin(); it != tasksToRun.end(); it++){
+        if((*it) == newTask){
+            return;
+        }
+    }
     //add task to tasksrunnign
     tasksToRun.push_back(newTask);
 
@@ -119,7 +122,6 @@ void TaskPool::addTaskNoValidation(Task * newTask){
 
 
 
-    tasksToRunMutex.unlock();
     //add the dependants
     for(int i = 0; i < newTask->dependentTasks.size(); i++)
         addTaskNoValidation(newTask->dependentTasks[i]);
@@ -151,14 +153,19 @@ void TaskPool::addTask(Task * newTask){
         return;
     }
     mutateTask(newTask);
+    tasksToRunMutex.lock();
     addTaskNoValidation(newTask);
+    tasksToRunMutex.unlock();
+
     BranchTask * trycast = dynamic_cast<BranchTask*>(newTask);
     if(newTask->isRepeatable.load() && trycast == nullptr){
         internalRepeatTask * t = new internalRepeatTask(newTask, this);
         internalTask ** tt = (internalTask**)&t;
         internalCache->InsertInternalItem(tt);
-
+        tasksToRunMutex.lock();
         addTaskNoValidation(*tt);
+        tasksToRunMutex.unlock();
+
     }
 }
 
