@@ -51,6 +51,7 @@ namespace Taskus{
                 }
                 newTask->taskValid.store(false);
                 receiveQueue->threadBusy.store(false);
+                receiveQueue->threadBusy.notify_all();
                 break;
             }
             if(quit) break; //exit the main loop which makes the thread joinable by the system
