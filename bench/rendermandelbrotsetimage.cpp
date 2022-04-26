@@ -1,6 +1,8 @@
 #include <iostream>
 #include <fstream>
 #include <math.h>
+#include <random>
+#include <algorithm>
 #include <stdexcept>
 #include <vector>
 #include <Taskus.h>
@@ -317,11 +319,21 @@ int main(int argc, char ** argv){
 
         int t = 1;
         int i = 0;
-        for(; t < tPool.getMaxNumOfThreads(); i++){
+
+        /*
+            we devide the image by 4 times the amount of threads to parellize this to avoid
+            a single cpu core running on a slow big chunk of the image. We also shuffle them around
+            to avoid this kind of behaviour.
+            This should be done automatically by Taskus when using the new FunctionTask, when possible 
+            because on this situation for example is not straightforward at least because how images are divided
+        */
+        for(; t < tPool.getMaxNumOfThreads()*4; i++){
             t *= 2;
         }
 
         std::vector<DividedImage> dimages = divideImage({0,0}, {width, height}, i);
+
+        std::shuffle(dimages.begin(), dimages.end(), std::random_device());
 
         for(DividedImage image : dimages){
             imagePartCalcTask * c = new imagePartCalcTask(image.start, image.end, image.image);
