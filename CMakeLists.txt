@@ -8,17 +8,21 @@ unset(TASKUS_BUILD_BENCHMARKS CACHE)
 set(TASKUS_BUILD_TESTS ON)
 set(TASKUS_BUILD_BENCHMARKS ON)
 
+set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
+
 
 #NEEDS GNU G++ VERSION >11
-if(CMAKE_CXX_COMPILER_VERSION VERSION_LESS 11.0)
-    message(FATAL_ERROR "Couldn't find a suitable gcc version > 11.0")
+if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+  if(CMAKE_CXX_COMPILER_VERSION VERSION_LESS 11.0)
+      message(FATAL_ERROR "Couldn't find a suitable gcc version > 11.0")
+  endif()
 endif()
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 if(UNIX)
   #use address sanitizer on debug mode
-  set (CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -fsanitize=address")
+  #set (CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -fsanitize=address")
 
   #force using mold in linux, it's wayy faster
   find_program(MOLD_EXISTS "mold")
@@ -49,11 +53,13 @@ file(GLOB_RECURSE INCLUDE_FILESS "include/*.h")
 add_library(Taskus SHARED ${SOURCE_FILESS} ${INCLUDE_FILESS})
 set(THREADS_PREFER_PTHREAD_FLAG ON)
 find_package(Threads REQUIRED)
-find_library(atomic-lib atomic)
-target_link_libraries(Taskus PRIVATE Threads::Threads atomic)
+if(UNIX)
+  find_library(atomic-lib atomic)
+  target_link_libraries(Taskus PRIVATE atomic)
+endif(UNIX)
+target_link_libraries(Taskus PRIVATE Threads::Threads)
 target_include_directories(Taskus PUBLIC include)
 target_compile_features(Taskus PUBLIC cxx_std_20)
-
 install(TARGETS Taskus DESTINATION lib)
 
 if(TASKUS_BUILD_TESTS)
@@ -93,7 +99,7 @@ if(TASKUS_BUILD_BENCHMARKS)
   foreach(file ${BENCH_FILES})
     cmake_path(GET file STEM filename)    
     add_executable(${filename} ${file})
-    target_link_libraries(${filename} Taskus)
+    target_link_libraries(${filename} PRIVATE Taskus)
     set_target_properties(${filename} PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bench")
 
   endforeach(file ${BENCH_FILES})
