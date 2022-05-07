@@ -8,7 +8,6 @@
 #include <Taskus.h>
 
 
-
 #define MAX_ITERATIONS 1000
 
 
@@ -21,13 +20,16 @@
 
 // __attribute__((__packed__)) doesnt allow the compiler to align the struct
 
-struct __attribute__((__packed__)) Pixel{
+#pragma pack(push,1)
+struct Pixel{
     uint8_t r;
     uint8_t g;
     uint8_t b;    
 };
+#pragma pack(pop)
 
-struct __attribute__((__packed__)) BitMapHeader{
+#pragma pack(push,1)
+struct BitMapHeader{
     char header[2] = {'B', 'M'};
     uint32_t BMPSize;
     uint16_t reserverd0 = 0;
@@ -36,8 +38,11 @@ struct __attribute__((__packed__)) BitMapHeader{
 
 
 };
+#pragma pack(pop)
 
-struct __attribute__((__packed__)) BitmapInfoHeader{
+#pragma pack(push,1)
+
+struct BitmapInfoHeader{
     uint32_t size = 40;
     int width;
     int height;
@@ -50,6 +55,7 @@ struct __attribute__((__packed__)) BitmapInfoHeader{
     uint32_t numberColors = 0;
     uint32_t importantColors = 0; //every color is important 
 };
+#pragma pack(pop)
 
 typedef std::vector<std::vector<Pixel>> ImageVec;
 
