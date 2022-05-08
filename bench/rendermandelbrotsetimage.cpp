@@ -278,7 +278,6 @@ std::vector<DividedImage> divideImage(Coords start, Coords end,int n_times){
     DividedImage d1;
     DividedImage d2;
     if(h > w){
-        std::cout << "Horizontal\n";
         d1.start = start;
         d1.end = {end.x, start.y + (end.y - start.y)/2};
         d2.start = {start.x, start.y + (end.y - start.y)/2 + 1};
@@ -286,7 +285,6 @@ std::vector<DividedImage> divideImage(Coords start, Coords end,int n_times){
         d1.image = createImage(d1.start, d1.end);
         d2.image = createImage(d2.start, d2.end);
     } else {
-        std::cout << "Vertical\n";
         d1.start = start;
         d1.end ={start.x + (end.x - start.x)/2, end.y};
         d2.start ={start.x + (end.x - start.x)/2 + 1, start.y};

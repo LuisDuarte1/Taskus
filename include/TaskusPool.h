@@ -16,7 +16,7 @@
 #include "TaskusTask.h"
 #include "internal_tasks/InternalTaskManager.h"
 #include "TaskusBranchTask.h"
-
+#include "FunctionTask.h"
 
 namespace Taskus{
 

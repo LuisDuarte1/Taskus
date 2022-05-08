@@ -13,19 +13,21 @@ set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
 
 if(WIN32)
   if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU") 
-  #this combination means that we have gcc and win32 = mingw-w64
-  #which means that it uses winpthreads for std::thread and is buggy with taskus for some reason and it hangs sometimes when stopping for reason
-  #it also has decreased performance, so for compiling taskus in windows use MSVC.
+    #this combination means that we have gcc and win32 = mingw-w64
+    #which means that it uses winpthreads for std::thread and is buggy with taskus for some reason and it hangs sometimes when stopping for reason
+    #it also has decreased performance, so for compiling taskus in windows use MSVC.
     message(FATAL_ERROR "Mingw-w64 is not supported yet, because winpthreads is slower and buggy with Taskus. Please use MSVC for compiling in Windows.")
-
+    
   endif()
 
 endif()
 
 #NEEDS GNU G++ VERSION >11
 if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-  if(CMAKE_CXX_COMPILER_VERSION VERSION_LESS 11.0)
-      message(FATAL_ERROR "Couldn't find a suitable gcc version > 11.0")
+  #In linux or other platforms we require gcc 11.2 and up because of a bug on atomic::wait()
+  #https://gcc.gnu.org/bugzilla/show_bug.cgi?id=101825
+  if(CMAKE_CXX_COMPILER_VERSION VERSION_LESS 11.2)
+      message(FATAL_ERROR "Couldn't find a suitable gcc version > 12.0")
   endif()
 endif()
 set(CMAKE_CXX_STANDARD 20)
