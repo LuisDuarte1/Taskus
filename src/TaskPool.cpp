@@ -4,7 +4,12 @@ namespace Taskus{
 
 
 TaskPool::TaskPool(){
-    unsigned int n = std::thread::hardware_concurrency(); //get maximum of threads possible
+    /*we sum 2 to the max thread count, because there might be situations
+    that a thread is waiting for something
+    and overcommiting the thread count allows the 
+    OS scheduler to switch to another thread while waiting
+    */
+    unsigned int n = std::thread::hardware_concurrency(); + 2; //get maximum of threads possible
     std::cout << "Number of maximum threads: " << n << "\n";
     for(int i = 0; i < n; i++){
         threadDeques.resize(threadDeques.size() + 1);
