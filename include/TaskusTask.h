@@ -69,7 +69,6 @@ namespace Taskus{
             //median should really only work when isRepeatable is true on the root task
             uint64_t getMedianExecutedTime();
 
-            void validateTaskToRun();
 
             std::vector<Task*> dependenciesTasks;
 
