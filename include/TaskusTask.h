@@ -39,6 +39,11 @@ namespace Taskus{
             //Must change finished to true in the end
             virtual void runTaskFunction() = 0; 
 
+
+            //This limits if the task must run in certain id
+            bool toRunInSameThread = false;
+            int thread_id = -1;
+
             
 
             //a task is considered final when it has zero dependentTasks

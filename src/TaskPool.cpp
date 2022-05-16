@@ -54,7 +54,8 @@ void TaskPool::stop(){
     //exiting before all tasks have stopped (the queue can be empty but there could be a thread that
     // adds to another)
     while (true)
-    {
+    {   
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
         tasksToRunMutex.lock();
         if(tasksToRun.size() == 0){
             tasksToRunMutex.unlock();
@@ -73,10 +74,6 @@ void TaskPool::stop(){
 
         tasksToRunMutex.unlock();
     }
-    
-    while(tasksToRun.size()){
-    }
-
     //to stop a thread, first we need to send a message to it, to break the main loop and make it joinable
     for(int i = 0; i < threads.size(); i++){
         //first we gain the lock
@@ -107,6 +104,11 @@ void TaskPool::addTaskNoValidation(Task * newTask){
             return;
         }
     }
+    if(newTask->toRunInSameThread && newTask->thread_id == -1){
+        newTask->thread_id = nextThreadID;
+        nextThreadID = (nextThreadID + 1 ) % threadDeques.size();
+    }
+
     //add task to tasksrunnign
     tasksToRun.push_back(newTask);
 
@@ -174,14 +176,37 @@ void TaskPool::addTask(Task * newTask){
     }
 }
 
-Task * TaskPool::tryObtainNewTask(){
+Task * TaskPool::tryObtainNewTask(int threadId){
     tasksToRunMutex.lock();
     if(tasksToRun.size() == 0){
         tasksToRunMutex.unlock();
         return nullptr;
     } 
-
     Task * firstTask = *tasksToRun.begin();
+    if(firstTask->toRunInSameThread && firstTask->thread_id != threadId){
+        //when it's not this thread we send a message to that thread saying that there is still a task that must
+        //run on that thread
+        threadDeques[firstTask->thread_id]->queueMutex.lock();
+        MessageThreadQueue m;
+        m.mType = TASK_AVAILABLE;
+        m.priority = 0;
+        //send message to thread
+        threadDeques[firstTask->thread_id]->queue.push_front(m);
+        //notify thread
+        threadDeques[firstTask->thread_id]->condVariable.notify_one();
+        threadDeques[firstTask->thread_id]->queueMutex.unlock();
+        
+
+        //to better optimize this we can fetch the next task if it's it exists and it can run on this thread
+        if(tasksToRun.size() > 1){
+            firstTask = *((tasksToRun.begin())++);
+            tasksToRunMutex.unlock();
+            if(firstTask->toRunInSameThread && firstTask->thread_id != threadId) return nullptr;
+            return firstTask;
+        }
+        tasksToRunMutex.unlock();
+        return nullptr;
+    }
     tasksToRun.pop_front();
     tasksToRunMutex.unlock();
     return firstTask;

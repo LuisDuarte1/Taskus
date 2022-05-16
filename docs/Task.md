@@ -30,3 +30,9 @@ Any mutations we want to remove we put it in the `std::vector` mutationRemoveTas
 Taskus will always try to measure the time of execute on each runTaskFunction and store the last 1000 runs. (for instance it allows for a simpler implementation of scaling back or scaling up of mutations on a Task, and it doesn't add much overhead anyways).
 
 It's not yet implemented yet but it will allow for creating a tool that can profile Tasks and how much time they take (with and without Taskus overhead).
+
+## Task to run always in the same Thread
+
+This feature can be activated by setting *toRunInSameThread* to True. The Task pool will then atribute it to a specific thread and it will always run on that thread. This can be useful on external functions that must be ran on the same thread all the times (Like the win32 window api requires because of messages). 
+
+NOTE: any initialization for using these APIs should be done on the task itself.

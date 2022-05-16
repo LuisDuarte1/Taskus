@@ -195,3 +195,21 @@ TEST(TaskPoolTest, RunRepeatableTaskDerivated){
     delete tt;
     delete tPool;
 }
+
+
+TEST(TaskPoolTest, RunRepeatableTaskDerivatedSameThread){
+    Taskus::TaskPool * tPool = new Taskus::TaskPool();
+    tPool->start();
+    repeatTimesTask * t = new repeatTimesTask();
+    t->toRunInSameThread = true;
+    repeatTimesTask * tt = new repeatTimesTask();
+    tt->toRunInSameThread = true;
+    tt->isRepeatable.store(false);
+    *t += tt;
+    tPool->addTask(t);
+    tPool->stop();
+    ASSERT_LE(tt->getNumberIterations(),0);
+    delete t;
+    delete tt;
+    delete tPool;
+}

@@ -7,6 +7,7 @@
 #include <array>
 #include <string>
 #include <list>
+#include <unordered_map>
 #include <stdexcept>
 
 #include "ThreadMessage.h"
@@ -33,7 +34,7 @@ namespace Taskus{
 
             void addTask(Task * newTask);
 
-            Task * tryObtainNewTask();
+            Task * tryObtainNewTask(int threadId);
 
             void addRepeatingTask(Task * startTask, std::vector<Task*> endTasks);
 
@@ -55,6 +56,8 @@ namespace Taskus{
 
             InternalTaskManager * internalCache;
             
+            //next thread id to assign to a task that needs to run in same function
+            int nextThreadID = 0;
 
             //for every thread it should be created one deques to allow interthread communication
             //it represents communication in direction TaskPool -> TaskusThread, the other direction should be

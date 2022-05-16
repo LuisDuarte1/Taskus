@@ -40,7 +40,7 @@ namespace Taskus{
                 quit = true;
                 break;
             case TASK_AVAILABLE:
-                Task * newTask = masterPool->tryObtainNewTask();
+                Task * newTask = masterPool->tryObtainNewTask(name);
                 if(newTask == nullptr) break;
                 receiveQueue->threadBusy.store(true);
                 newTask->tryMutate();
