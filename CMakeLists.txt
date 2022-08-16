@@ -27,7 +27,7 @@ if(WIN32)
     message(FATAL_ERROR "Mingw-w64 is not supported yet, because winpthreads is slower and buggy with Taskus. Please use MSVC for compiling in Windows.")
     
   endif()
-
+  string(REPLACE "/showIncludes" "" CMAKE_DEPFILE_FLAGS_CXX ${CMAKE_DEPFILE_FLAGS_CXX}) #nasty fix when using msvc bevause the generator enables /showIncludes by default for some wierd reason
 endif()
 
 #NEEDS GNU G++ VERSION >11
