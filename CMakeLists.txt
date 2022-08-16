@@ -127,6 +127,12 @@ if(TASKUS_BUILD_BENCHMARKS)
   include(ProcessorCount)
   ProcessorCount(NCPU)
   file(WRITE "${CMAKE_BINARY_DIR}/bench/Makefile" "all:\n\tcd .. && make -j${NCPU}")
+
+  #cp or replace taskus.dll everytime it builds on windows
+  if(WIN32)
+    add_custom_target(CP_TASKUS ALL COMMAND copy /y Taskus.dll bench)
+    add_dependencies(CP_TASKUS Taskus)
+  endif(WIN32)
 endif(TASKUS_BUILD_BENCHMARKS)
 
 
