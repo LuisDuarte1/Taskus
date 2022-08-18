@@ -44,6 +44,9 @@ namespace Taskus{
 
     void Task::waitToFinish(){
         finished.wait(false);
+        if(!finished.load()){
+            waitToFinish();
+        }
 
     }
 
